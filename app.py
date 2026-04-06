@@ -19,7 +19,7 @@ model, scaler = load_models()
 # 🎨 UI Setup
 st.set_page_config(page_title="Diabetes Predictor", layout="centered")
 st.title("🩺 Diabetes Prediction App")
-st.write("Patient ke details enter karein taaki model predict kar sake ke diabetes hai ya nahi.")
+st.write("Enter the patient's details so that the model can predict whether they have diabetes or not.")
 
 # 📝 Input Fields
 st.markdown("---")
@@ -40,7 +40,7 @@ with col2:
 # 🚀 Prediction Button
 if st.button("🔍 Predict Diabetes"):
     try:
-        # DataFrame banana zaroori hai taaki columns ka order training jaisa hi rahe
+        # Create DataFrame to maintain correct column order as used during training
         input_data = pd.DataFrame({
             'Pregnancies': [pregnancies],
             'Glucose': [glucose],
@@ -55,17 +55,39 @@ if st.button("🔍 Predict Diabetes"):
         # Scale & Predict
         input_scaled = scaler.transform(input_data)
         prediction = model.predict(input_scaled)[0]
+        probability = model.predict_proba(input_scaled)[0]
 
         # Result Display
         st.markdown("---")
+        st.subheader("📋 Prediction Result")
+
         if prediction == 1:
-            st.error("🔴 **Result: Diabetes Detected**\nPatient ko diabetes hone ka risk hai. Doctor se consult karein.")
+            st.error("🔴 **Result: Diabetes Detected**")
+            st.write("The patient is likely to have diabetes. Please consult a doctor as soon as possible.")
+            st.metric(label="Risk Probability", value=f"{probability[1] * 100:.1f}%")
         else:
-            st.success("✅ **Result: No Diabetes**\nPatient mein diabetes ke koi clear signs nahi mile.")
+            st.success("🟢 **Result: No Diabetes Detected**")
+            st.write("The patient does not appear to have diabetes. Keep maintaining a healthy lifestyle!")
+            st.metric(label="Healthy Probability", value=f"{probability[0] * 100:.1f}%")
+
+        # Input Summary
+        st.markdown("---")
+        st.subheader("📊 Input Summary")
+        summary_data = {
+            "Feature": [
+                "Pregnancies", "Glucose", "Blood Pressure", "Skin Thickness",
+                "Insulin", "BMI", "Diabetes Pedigree Function", "Age"
+            ],
+            "Value": [
+                pregnancies, glucose, blood_pressure, skin_thickness,
+                insulin, bmi, dpf, age
+            ]
+        }
+        st.table(pd.DataFrame(summary_data))
 
     except Exception as e:
-        st.error(f"⚠️ Koi error aaya: {e}")
+        st.error(f"⚠️ An error occurred: {e}")
 
 # ℹ️ Footer
 st.markdown("---")
-st.caption("⚡ Model: Random Forest | 📊 Accuracy: ~80.5% | 🔒 Data locally process hota hai.")
+st.caption("⚡ Model: Random Forest | 📊 Accuracy: ~80.5% | 🔒 Data is processed locally.")
